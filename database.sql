@@ -58,3 +58,28 @@ CREATE TABLE program_modules
     module_id  BIGINT NOT NULL REFERENCES modules (id) ON DELETE CASCADE,
     PRIMARY KEY (program_id, module_id)
 );
+
+CREATE TYPE user_role_enum AS ENUM ('student', 'teacher', 'admin');
+
+CREATE TABLE teaching_groups
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    slug       VARCHAR     NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE users
+(
+    id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username          VARCHAR        NOT NULL UNIQUE,
+    email             VARCHAR        NOT NULL UNIQUE,
+    password_hash     TEXT           NOT NULL,
+    role              user_role_enum NOT NULL,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    teaching_group_id BIGINT         NOT NULL
+        REFERENCES teaching_groups (id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_users_teaching_group_id ON users (teaching_group_id);
