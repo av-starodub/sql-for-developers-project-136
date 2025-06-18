@@ -221,3 +221,46 @@ CREATE TABLE exercises
 );
 
 CREATE INDEX idx_exercises_lesson_id ON exercises (lesson_id);
+
+CREATE
+EXTENSION IF NOT EXISTS ltree;
+
+CREATE TYPE blog_post_status_enum AS ENUM (
+    'created',
+    'in moderation',
+    'published',
+    'archived'
+);
+
+CREATE TABLE discussions
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lesson_id  BIGINT      NOT NULL
+        REFERENCES lessons (id) ON DELETE CASCADE,
+    author_id  BIGINT      NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    path       LTREE       NOT NULL, -- позиция узла в дереве
+    message    TEXT        NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT discussions_lesson_path_uq UNIQUE (lesson_id, path)
+);
+
+CREATE INDEX idx_discussions_lesson_path ON discussions USING GIST (lesson_id, path);
+CREATE INDEX idx_discussions_author_id ON discussions (author_id);
+
+CREATE TABLE blog_posts
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    author_id  BIGINT                NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    title      VARCHAR               NOT NULL,
+    content    TEXT                  NOT NULL,
+    status     blog_post_status_enum NOT NULL DEFAULT 'created',
+    created_at TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ           NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_blog_posts_author_id ON blog_posts (author_id);
+CREATE INDEX idx_blog_posts_status ON blog_posts (status);
