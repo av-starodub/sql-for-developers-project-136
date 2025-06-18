@@ -15,9 +15,9 @@ CREATE TABLE modules
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name        VARCHAR     NOT NULL,
     description TEXT,
-    is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
 );
 
 CREATE TABLE courses
@@ -25,9 +25,9 @@ CREATE TABLE courses
     id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name        VARCHAR     NOT NULL,
     description TEXT,
-    is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at  TIMESTAMPTZ
 );
 
 CREATE TABLE lessons
@@ -37,15 +37,15 @@ CREATE TABLE lessons
     content    TEXT,
     video_url  TEXT,
     position   INTEGER     NOT NULL,
-    is_deleted BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ,
 
     course_id  BIGINT      NOT NULL REFERENCES courses (id) ON DELETE RESTRICT,
     CONSTRAINT lessons_course_position_uq UNIQUE (course_id, position)
 );
 
-CREATE TABLE module_courses
+CREATE TABLE course_modules
 (
     module_id BIGINT NOT NULL REFERENCES modules (id) ON DELETE CASCADE,
     course_id BIGINT NOT NULL REFERENCES courses (id) ON DELETE CASCADE,
@@ -72,7 +72,7 @@ CREATE TABLE teaching_groups
 CREATE TABLE users
 (
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    username          VARCHAR        NOT NULL UNIQUE,
+    name              VARCHAR        NOT NULL UNIQUE,
     email             VARCHAR        NOT NULL UNIQUE,
     password_hash     TEXT           NOT NULL,
     role              user_role_enum NOT NULL,
@@ -137,16 +137,16 @@ CREATE INDEX idx_payments_enrollment_id ON payments (enrollment_id);
 
 CREATE TABLE program_completions
 (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id     BIGINT                         NOT NULL
+    id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id      BIGINT                         NOT NULL
         REFERENCES users (id) ON DELETE RESTRICT,
-    program_id  BIGINT                         NOT NULL
+    program_id   BIGINT                         NOT NULL
         REFERENCES programs (id) ON DELETE RESTRICT,
-    status      program_completion_status_enum NOT NULL DEFAULT 'pending',
-    started_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
-    finished_at TIMESTAMPTZ,
-    created_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+    status       program_completion_status_enum NOT NULL DEFAULT 'pending',
+    started_at   TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+    completed_at TIMESTAMPTZ,
+    created_at   TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
 
     CONSTRAINT program_completions_user_program_uq UNIQUE (user_id, program_id)
 );
@@ -177,13 +177,13 @@ EXTENSION IF NOT EXISTS ltree;
 
 CREATE TABLE quizzes
 (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lesson_id   BIGINT      NOT NULL
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lesson_id  BIGINT      NOT NULL
         REFERENCES lessons (id) ON DELETE CASCADE,
-    name        VARCHAR     NOT NULL,
-    description TEXT,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    name       VARCHAR     NOT NULL,
+    content    TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT quizzes_lesson_uq UNIQUE (lesson_id)
 );
@@ -222,10 +222,7 @@ CREATE TABLE exercises
 
 CREATE INDEX idx_exercises_lesson_id ON exercises (lesson_id);
 
-CREATE
-EXTENSION IF NOT EXISTS ltree;
-
-CREATE TYPE blog_post_status_enum AS ENUM (
+CREATE TYPE blog_status_enum AS ENUM (
     'created',
     'in moderation',
     'published',
@@ -237,10 +234,10 @@ CREATE TABLE discussions
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     lesson_id  BIGINT      NOT NULL
         REFERENCES lessons (id) ON DELETE CASCADE,
-    author_id  BIGINT      NOT NULL
+    user_id    BIGINT      NOT NULL
         REFERENCES users (id) ON DELETE RESTRICT,
-    path       LTREE       NOT NULL, -- позиция узла в дереве
-    message    TEXT        NOT NULL,
+    path       LTREE       NOT NULL,
+    text       TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -248,19 +245,19 @@ CREATE TABLE discussions
 );
 
 CREATE INDEX idx_discussions_lesson_path ON discussions USING GIST (lesson_id, path);
-CREATE INDEX idx_discussions_author_id ON discussions (author_id);
+CREATE INDEX idx_discussions_user_id ON discussions (user_id);
 
-CREATE TABLE blog_posts
+CREATE TABLE blogs
 (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    author_id  BIGINT                NOT NULL
+    user_id    BIGINT           NOT NULL
         REFERENCES users (id) ON DELETE RESTRICT,
-    title      VARCHAR               NOT NULL,
-    content    TEXT                  NOT NULL,
-    status     blog_post_status_enum NOT NULL DEFAULT 'created',
-    created_at TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ           NOT NULL DEFAULT NOW()
+    name       VARCHAR          NOT NULL,
+    content    TEXT             NOT NULL,
+    status     blog_status_enum NOT NULL DEFAULT 'created',
+    created_at TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ      NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_blog_posts_author_id ON blog_posts (author_id);
-CREATE INDEX idx_blog_posts_status ON blog_posts (status);
+CREATE INDEX idx_blog_user_id ON blogs (user_id);
+CREATE INDEX idx_blog_status ON blogs (status);
