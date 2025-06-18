@@ -212,8 +212,7 @@ CREATE TABLE discussions
         REFERENCES users (id) ON DELETE RESTRICT,
     text       JSONB       NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT discussions_lesson_uq UNIQUE (lesson_id)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_discussions_user_id ON discussions (user_id);
