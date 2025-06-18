@@ -71,7 +71,7 @@ CREATE TABLE users
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name              VARCHAR        NOT NULL UNIQUE,
     email             VARCHAR        NOT NULL UNIQUE,
-    password_hash     TEXT           NOT NULL,
+    password_hash     TEXT,
     role              user_role_enum NOT NULL,
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
