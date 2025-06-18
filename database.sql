@@ -56,7 +56,7 @@ CREATE TABLE program_modules
     PRIMARY KEY (program_id, module_id)
 );
 
-CREATE TYPE user_role_enum AS ENUM ('student', 'teacher', 'admin');
+CREATE TYPE user_role_enum AS ENUM ('Student', 'Teacher', 'Admin');
 
 CREATE TABLE teaching_groups
 (
