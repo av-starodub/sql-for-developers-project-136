@@ -61,7 +61,7 @@ CREATE TYPE user_role_enum AS ENUM ('Student', 'Teacher', 'Admin');
 CREATE TABLE teaching_groups
 (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    slug       VARCHAR     NOT NULL UNIQUE,
+    slug       VARCHAR     NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
