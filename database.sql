@@ -178,9 +178,7 @@ CREATE TABLE quizzes
     name       VARCHAR     NOT NULL,
     content    JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT quizzes_lesson_uq UNIQUE (lesson_id)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_quizzes_lesson_id ON quizzes (lesson_id);
@@ -193,9 +191,7 @@ CREATE TABLE exercises
     name       VARCHAR     NOT NULL,
     url        TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT exercises_lesson_uq UNIQUE (lesson_id)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_exercises_lesson_id ON exercises (lesson_id);
