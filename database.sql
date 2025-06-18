@@ -1,13 +1,11 @@
-CREATE TYPE program_type_enum AS ENUM ('INTENSIVE', 'PROFESSION');
-
 CREATE TABLE programs
 (
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name         VARCHAR           NOT NULL,
-    price        NUMERIC(12, 2)    NOT NULL CHECK (price >= 0),
-    program_type program_type_enum NOT NULL,
-    created_at   TIMESTAMPTZ       NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMPTZ       NOT NULL DEFAULT NOW()
+    name         VARCHAR        NOT NULL,
+    price        NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
+    program_type VARCHAR        NOT NULL,
+    created_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ    NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE modules
@@ -36,12 +34,11 @@ CREATE TABLE lessons
     name       VARCHAR     NOT NULL,
     content    TEXT,
     video_url  TEXT,
-    position   INTEGER     NOT NULL,
+    position   INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ,
-
-    course_id  BIGINT      NOT NULL REFERENCES courses (id) ON DELETE RESTRICT,
+    course_id  BIGINT REFERENCES courses (id) ON DELETE RESTRICT,
     CONSTRAINT lessons_course_position_uq UNIQUE (course_id, position)
 );
 
