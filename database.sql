@@ -171,3 +171,53 @@ CREATE TABLE certificates
 
 CREATE INDEX idx_certificates_user_id ON certificates (user_id);
 CREATE INDEX idx_certificates_program_id ON certificates (program_id);
+
+CREATE
+EXTENSION IF NOT EXISTS ltree;
+
+CREATE TABLE quizzes
+(
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lesson_id   BIGINT      NOT NULL
+        REFERENCES lessons (id) ON DELETE CASCADE,
+    name        VARCHAR     NOT NULL,
+    description TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT quizzes_lesson_uq UNIQUE (lesson_id)
+);
+
+CREATE INDEX idx_quizzes_lesson_id ON quizzes (lesson_id);
+
+CREATE TABLE quiz_questions
+(
+    id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    quiz_id        BIGINT      NOT NULL
+        REFERENCES quizzes (id) ON DELETE CASCADE,
+    path           LTREE       NOT NULL,
+    question_text  TEXT        NOT NULL,
+    options        JSONB,
+    correct_answer JSONB,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT quiz_questions_quiz_path_uq UNIQUE (quiz_id, path)
+);
+
+CREATE INDEX idx_quiz_questions_path ON quiz_questions USING GIST (quiz_id, path);
+
+CREATE TABLE exercises
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lesson_id  BIGINT      NOT NULL
+        REFERENCES lessons (id) ON DELETE CASCADE,
+    name       VARCHAR     NOT NULL,
+    url        TEXT        NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT exercises_lesson_uq UNIQUE (lesson_id)
+);
+
+CREATE INDEX idx_exercises_lesson_id ON exercises (lesson_id);
