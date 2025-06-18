@@ -78,6 +78,7 @@ CREATE TABLE users
     role              user_role_enum NOT NULL,
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+    deleted_at        TIMESTAMPTZ,
     teaching_group_id BIGINT         NOT NULL
         REFERENCES teaching_groups (id) ON DELETE RESTRICT
 );
@@ -154,24 +155,6 @@ CREATE TABLE program_completions
 CREATE INDEX idx_prog_comp_user_id ON program_completions (user_id);
 CREATE INDEX idx_prog_comp_program_id ON program_completions (program_id);
 
-CREATE TABLE certificates
-(
-    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id    BIGINT      NOT NULL
-        REFERENCES users (id) ON DELETE RESTRICT,
-    program_id BIGINT      NOT NULL
-        REFERENCES programs (id) ON DELETE RESTRICT,
-    url        TEXT        NOT NULL,
-    issued_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT certificates_user_program_uq UNIQUE (user_id, program_id)
-);
-
-CREATE INDEX idx_certificates_user_id ON certificates (user_id);
-CREATE INDEX idx_certificates_program_id ON certificates (program_id);
-
 CREATE
 EXTENSION IF NOT EXISTS ltree;
 
@@ -205,7 +188,8 @@ CREATE TABLE quiz_questions
     CONSTRAINT quiz_questions_quiz_path_uq UNIQUE (quiz_id, path)
 );
 
-CREATE INDEX idx_quiz_questions_path ON quiz_questions USING GIST (quiz_id, path);
+CREATE INDEX idx_quiz_questions_path_gist ON quiz_questions USING GIST (path);
+CREATE INDEX idx_quiz_questions_quiz_id ON quiz_questions (quiz_id);
 
 CREATE TABLE exercises
 (
@@ -244,8 +228,9 @@ CREATE TABLE discussions
     CONSTRAINT discussions_lesson_path_uq UNIQUE (lesson_id, path)
 );
 
-CREATE INDEX idx_discussions_lesson_path ON discussions USING GIST (lesson_id, path);
+CREATE INDEX idx_discussions_path_gist ON discussions USING GIST (path);
 CREATE INDEX idx_discussions_user_id ON discussions (user_id);
+CREATE INDEX idx_discussions_lesson_id ON discussions (lesson_id);
 
 CREATE TABLE blogs
 (
