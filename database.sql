@@ -155,6 +155,24 @@ CREATE TABLE program_completions
 CREATE INDEX idx_prog_comp_user_id ON program_completions (user_id);
 CREATE INDEX idx_prog_comp_program_id ON program_completions (program_id);
 
+CREATE TABLE certificates
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id    BIGINT      NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    program_id BIGINT      NOT NULL
+        REFERENCES programs (id) ON DELETE RESTRICT,
+    url        TEXT        NOT NULL,
+    issued_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT certificates_user_program_uq UNIQUE (user_id, program_id)
+);
+
+CREATE INDEX idx_certificates_user_id ON certificates (user_id);
+CREATE INDEX idx_certificates_program_id ON certificates (program_id);
+
 CREATE
 EXTENSION IF NOT EXISTS ltree;
 
@@ -220,15 +238,11 @@ CREATE TABLE discussions
         REFERENCES lessons (id) ON DELETE CASCADE,
     user_id    BIGINT      NOT NULL
         REFERENCES users (id) ON DELETE RESTRICT,
-    path       LTREE       NOT NULL,
     text       TEXT        NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    CONSTRAINT discussions_lesson_path_uq UNIQUE (lesson_id, path)
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_discussions_path_gist ON discussions USING GIST (path);
 CREATE INDEX idx_discussions_user_id ON discussions (user_id);
 CREATE INDEX idx_discussions_lesson_id ON discussions (lesson_id);
 
