@@ -69,7 +69,7 @@ CREATE TABLE teaching_groups
 CREATE TABLE users
 (
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name              VARCHAR        NOT NULL UNIQUE,
+    name              VARCHAR        NOT NULL,
     email             VARCHAR        NOT NULL UNIQUE,
     password_hash     TEXT,
     role              user_role_enum NOT NULL,
