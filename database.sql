@@ -83,3 +83,91 @@ CREATE TABLE users
 );
 
 CREATE INDEX idx_users_teaching_group_id ON users (teaching_group_id);
+
+CREATE TYPE enrollment_status_enum AS ENUM (
+    'active',
+    'pending',
+    'cancelled',
+    'completed'
+);
+
+CREATE TYPE payment_status_enum AS ENUM (
+    'pending',
+    'paid',
+    'failed',
+    'refunded'
+);
+
+CREATE TYPE program_completion_status_enum AS ENUM (
+    'active',
+    'completed',
+    'pending',
+    'cancelled'
+);
+
+CREATE TABLE enrollments
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id    BIGINT                 NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    program_id BIGINT                 NOT NULL
+        REFERENCES programs (id) ON DELETE RESTRICT,
+    status     enrollment_status_enum NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ            NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ            NOT NULL DEFAULT NOW(),
+    CONSTRAINT enrollments_user_program_uq UNIQUE (user_id, program_id)
+);
+
+CREATE INDEX idx_enrollments_user_id ON enrollments (user_id);
+CREATE INDEX idx_enrollments_program_id ON enrollments (program_id);
+
+CREATE TABLE payments
+(
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    enrollment_id BIGINT              NOT NULL
+        REFERENCES enrollments (id) ON DELETE CASCADE,
+    amount        NUMERIC(12, 2)      NOT NULL CHECK (amount >= 0),
+    status        payment_status_enum NOT NULL DEFAULT 'pending',
+    paid_at       TIMESTAMPTZ,
+    created_at    TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ         NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_payments_enrollment_id ON payments (enrollment_id);
+
+CREATE TABLE program_completions
+(
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     BIGINT                         NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    program_id  BIGINT                         NOT NULL
+        REFERENCES programs (id) ON DELETE RESTRICT,
+    status      program_completion_status_enum NOT NULL DEFAULT 'pending',
+    started_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+    finished_at TIMESTAMPTZ,
+    created_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ                    NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT program_completions_user_program_uq UNIQUE (user_id, program_id)
+);
+
+CREATE INDEX idx_prog_comp_user_id ON program_completions (user_id);
+CREATE INDEX idx_prog_comp_program_id ON program_completions (program_id);
+
+CREATE TABLE certificates
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id    BIGINT      NOT NULL
+        REFERENCES users (id) ON DELETE RESTRICT,
+    program_id BIGINT      NOT NULL
+        REFERENCES programs (id) ON DELETE RESTRICT,
+    url        TEXT        NOT NULL,
+    issued_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT certificates_user_program_uq UNIQUE (user_id, program_id)
+);
+
+CREATE INDEX idx_certificates_user_id ON certificates (user_id);
+CREATE INDEX idx_certificates_program_id ON certificates (program_id);
